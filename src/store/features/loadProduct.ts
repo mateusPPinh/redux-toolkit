@@ -4,11 +4,11 @@ import products from '../../products'
 
 const apiURL = "http://localhost:3333/products"
 
-// equivale ao usu do state no useState
 const initialState = {
   items: products,
   cartTotal: 0,
   cartItems: [],
+  finalPrice: 0
 }
 
 export const getProducts = createAsyncThunk('/products', () => {
@@ -24,6 +24,7 @@ const productsSlice = createSlice({
     increase: (state, action) => {
       const product = state.items.find((item) => item.id === action.payload.id);
       const cartItem = state.cartItems.find((item) => item.id === action.payload.id); 
+      productsSlice.caseReducers.sumTotal(state);
 
       if (cartItem) {
         cartItem.amount += 1;
@@ -36,6 +37,7 @@ const productsSlice = createSlice({
     },
     decrease: (state, action) => {
       const index = state.cartItems.findIndex(item => item.id === action.payload.id);
+      productsSlice.caseReducers.sumTotal(state);
       if (index !== -1) {
           if (state.cartItems[index].amount === 1) {
               state.cartItems.splice(index, 1);
@@ -44,8 +46,11 @@ const productsSlice = createSlice({
           }
       }
       state.cartTotal -= 1;
-  }
-    
+  },
+    sumTotal: (state) => {
+      const sum = state.cartItems.reduce((acc, item) => acc + (item.product_price * item.amount), 0); 
+      state.finalPrice = sum;
+    }
   },
   extraReducers: {
     [getProducts.pending]: (state) => {
@@ -61,6 +66,6 @@ const productsSlice = createSlice({
   }
 })
 
-export const {increase, decrease} = productsSlice.actions
+export const {increase, decrease, sumTotal} = productsSlice.actions
 
 export default productsSlice.reducer
